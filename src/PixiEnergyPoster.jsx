@@ -132,45 +132,108 @@ export default function PixiEnergyPoster() {
     maxLife: 1,
     color: choose(PARTICLE_COLORS),
     phase: rand(0, Math.PI * 2),
-    zone: 'bottom',
+    zone: 'body',
+    targetX: 0,
+    targetY: 0,
+    sideScatter: false,
+    chaos: false,
   };
 
   p.reset = () => {
-    const spawn = choose(['bottom', 'bottom', 'bottom', 'leftHand', 'rightHand']);
+    const spawn = choose([
+      'legs','legs','legs',
+      'torso','torso','torso',
+      'leftArm','rightArm',
+      'chest','head'
+    ]);
+
     p.zone = spawn;
 
-    if (spawn === 'bottom') {
-      p.x = CX() + rand(-W() * 0.035, W() * 0.035);
-      p.y = H() * 0.88 + rand(-H() * 0.04, H() * 0.015);
-      p.vx = rand(-0.03, 0.03);
-      p.vy = front ? rand(-0.55, -0.22) : rand(-0.40, -0.16);
-      p.life = rand(45, 110);
-    } else if (spawn === 'leftHand') {
-      p.x = W() * 0.33 + rand(-W() * 0.02, W() * 0.015);
-      p.y = H() * 0.63 + rand(-H() * 0.03, H() * 0.02);
-      p.vx = rand(-0.04, 0.015);
-      p.vy = front ? rand(-0.40, -0.14) : rand(-0.28, -0.10);
-      p.life = rand(35, 85);
-    } else {
-      p.x = W() * 0.67 + rand(-W() * 0.015, W() * 0.02);
-      p.y = H() * 0.63 + rand(-H() * 0.03, H() * 0.02);
-      p.vx = rand(-0.015, 0.04);
-      p.vy = front ? rand(-0.40, -0.14) : rand(-0.28, -0.10);
-      p.life = rand(35, 85);
+    // 🔥 редкие хаос частицы
+    p.chaos = Math.random() < 0.035;
+
+    // 🔥 редкий боковой разлет
+    p.sideScatter = Math.random() < 0.10;
+
+    if (spawn === 'legs') {
+      p.x = CX() + rand(-W() * 0.04, W() * 0.04);
+      p.y = H() * 0.80 + rand(-H() * 0.10, H() * 0.08);
+      p.targetX = CX() + rand(-W() * 0.02, W() * 0.02);
+      p.targetY = H() * 0.56 + rand(-H() * 0.03, H() * 0.04);
+      p.life = rand(60, 110);
     }
 
-    p.size = front ? rand(0.45, 1.15) : rand(0.25, 0.75);
+    else if (spawn === 'leftArm') {
+      p.x = W() * 0.34 + rand(-W() * 0.025, W() * 0.015);
+      p.y = H() * 0.56 + rand(-H() * 0.10, H() * 0.08);
+      p.targetX = W() * 0.45 + rand(-W() * 0.02, W() * 0.015);
+      p.targetY = H() * 0.34 + rand(-H() * 0.03, H() * 0.05);
+      p.life = rand(50, 95);
+    }
+
+    else if (spawn === 'rightArm') {
+      p.x = W() * 0.66 + rand(-W() * 0.015, W() * 0.025);
+      p.y = H() * 0.56 + rand(-H() * 0.10, H() * 0.08);
+      p.targetX = W() * 0.55 + rand(-W() * 0.015, W() * 0.02);
+      p.targetY = H() * 0.34 + rand(-H() * 0.03, H() * 0.05);
+      p.life = rand(50, 95);
+    }
+
+    else if (spawn === 'torso') {
+      p.x = CX() + rand(-W() * 0.06, W() * 0.06);
+      p.y = H() * 0.52 + rand(-H() * 0.10, H() * 0.12);
+      p.targetX = CX() + rand(-W() * 0.025, W() * 0.025);
+      p.targetY = H() * 0.30 + rand(-H() * 0.03, H() * 0.04);
+      p.life = rand(45, 90);
+    }
+
+    else if (spawn === 'chest') {
+      p.x = CX() + rand(-W() * 0.035, W() * 0.035);
+      p.y = H() * 0.46 + rand(-H() * 0.04, H() * 0.05);
+      p.targetX = CX() + rand(-W() * 0.02, W() * 0.02);
+      p.targetY = H() * 0.27 + rand(-H() * 0.02, H() * 0.03);
+      p.life = rand(40, 80);
+    }
+
+    else {
+      p.x = CX() + rand(-W() * 0.025, W() * 0.025);
+      p.y = H() * 0.35 + rand(-H() * 0.04, H() * 0.03);
+      p.targetX = CX() + rand(-W() * 0.015, W() * 0.015);
+      p.targetY = H() * 0.18 + rand(-H() * 0.02, H() * 0.03);
+      p.life = rand(35, 70);
+    }
+
+    // 🔥 хаос частицы живут дольше
+    if (p.chaos) {
+      p.life *= 1.8;
+    }
+
     p.maxLife = p.life;
+
+    if (p.chaos) {
+      p.size = rand(0.2, 0.5);
+    } else {
+      p.size = front ? rand(0.45, 1.15) : rand(0.25, 0.75);
+    }
+
     p.color = choose(PARTICLE_COLORS);
     p.phase = rand(0, Math.PI * 2);
+
+    if (p.sideScatter) {
+      p.vx = rand(-0.18, 0.18);
+      p.vy = rand(-0.08, 0.04);
+    } else {
+      p.vx = 0;
+      p.vy = 0;
+    }
   };
 
   p.reset();
   return p;
 };
 
-      const embersBack = Array.from({ length: 60 }, () => makeParticle(false));
-const embersFront = Array.from({ length: 34 }, () => makeParticle(true));
+      const embersBack = Array.from({ length: 80 }, () => makeParticle(false));
+const embersFront = Array.from({ length: 42 }, () => makeParticle(true));
 
       let flashLife = 0;
       let flashMax = 1;
@@ -289,17 +352,54 @@ base.y = CY();
   arr.forEach((p, i) => {
     p.life -= delta;
 
-    const drift =
-      p.zone === 'bottom'
-        ? (front ? 0.045 : 0.025)
-        : (front ? 0.030 : 0.018);
+    const progress = 1 - p.life / p.maxLife;
+    const clamped = clamp(progress, 0, 1);
 
-    p.x += p.vx * delta + Math.sin(t * 0.0032 + p.phase + i * 0.08) * drift;
-    p.y += p.vy * delta;
+    // 🔥 ХАОС частицы
+    if (p.chaos) {
+      p.x += Math.sin(t * 0.006 + p.phase) * 0.25;
+      p.y += Math.cos(t * 0.005 + p.phase) * 0.18;
 
-    if (p.life <= 0 || p.y < H() * 0.18) {
-      p.reset();
+      if (Math.random() < 0.02) {
+        p.vx = rand(-0.25, 0.25);
+        p.vy = rand(-0.25, 0.15);
+      }
+
+      p.x += p.vx * delta;
+      p.y += p.vy * delta;
+
+      p.g.rotation += 0.08 * delta;
     }
+
+    // 🔥 основной поток
+    else if (!p.sideScatter) {
+      const ease = 0.018 * delta;
+
+      p.x += (p.targetX - p.x) * ease;
+      p.y += (p.targetY - p.y) * ease;
+
+      p.x += Math.sin(t * 0.0032 + p.phase + i * 0.08) * (front ? 0.09 : 0.05);
+      p.y += Math.cos(t * 0.0024 + p.phase + i * 0.05) * (front ? 0.025 : 0.015);
+
+      // 🔥 сужение к центру
+      if (p.zone !== 'legs') {
+        const pull = (CX() - p.x) * (0.008 + clamped * 0.015) * delta;
+        p.x += pull;
+      }
+    }
+
+    // 🔥 боковые частицы
+    else {
+      p.x += p.vx * delta;
+      p.y += p.vy * delta;
+    }
+
+    // 🔥 зоны исчезновения
+    if (p.zone === 'legs' && p.y <= H() * 0.55) p.life = 0;
+    if ((p.zone === 'leftArm' || p.zone === 'rightArm') && p.y <= H() * 0.30) p.life = 0;
+    if ((p.zone === 'torso' || p.zone === 'chest' || p.zone === 'head') && p.y <= H() * 0.16) p.life = 0;
+
+    if (p.life <= 0) p.reset();
 
     const life = clamp(p.life / p.maxLife, 0, 1);
     const alpha = life * (front ? 0.92 : 0.68);
@@ -310,7 +410,6 @@ base.y = CY();
 
     p.g.x = p.x;
     p.g.y = p.y;
-    p.g.rotation = p.zone === 'bottom' ? 0.10 : (p.zone === 'leftHand' ? -0.25 : 0.25);
   });
 };
 
