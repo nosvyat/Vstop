@@ -117,41 +117,60 @@ export default function PixiEnergyPoster() {
       };
 
       const makeParticle = (front = false) => {
-        const g = new PIXI.Graphics();
-        (front ? emberLayerFront : emberLayerBack).addChild(g);
+  const g = new PIXI.Graphics();
+  (front ? emberLayerFront : emberLayerBack).addChild(g);
 
-        const p = {
-          g,
-          front,
-          x: 0,
-          y: 0,
-          vx: 0,
-          vy: 0,
-          size: 1,
-          life: 0,
-          maxLife: 1,
-          color: choose(PARTICLE_COLORS),
-          phase: rand(0, Math.PI * 2),
-        };
+  const p = {
+    g,
+    front,
+    x: 0,
+    y: 0,
+    vx: 0,
+    vy: 0,
+    size: 1,
+    life: 0,
+    maxLife: 1,
+    color: choose(PARTICLE_COLORS),
+    phase: rand(0, Math.PI * 2),
+    zone: 'bottom',
+  };
 
-        p.reset = () => {
-          p.x = CX() + rand(-W() * 0.15, W() * 0.15);
-          p.y = rand(H() * 0.10, H() * 0.52);
-          p.vx = rand(-0.05, 0.05);
-          p.vy = front ? rand(-0.90, -0.45) : rand(-0.68, -0.28);
-          p.size = front ? rand(0.6, 1.6) : rand(0.35, 1.0);
-          p.life = rand(60, 170);
-          p.maxLife = p.life;
-          p.color = choose(PARTICLE_COLORS);
-          p.phase = rand(0, Math.PI * 2);
-        };
+  p.reset = () => {
+    const spawn = choose(['bottom', 'bottom', 'bottom', 'leftHand', 'rightHand']);
+    p.zone = spawn;
 
-        p.reset();
-        return p;
-      };
+    if (spawn === 'bottom') {
+      p.x = CX() + rand(-W() * 0.035, W() * 0.035);
+      p.y = H() * 0.88 + rand(-H() * 0.04, H() * 0.015);
+      p.vx = rand(-0.03, 0.03);
+      p.vy = front ? rand(-0.55, -0.22) : rand(-0.40, -0.16);
+      p.life = rand(45, 110);
+    } else if (spawn === 'leftHand') {
+      p.x = W() * 0.33 + rand(-W() * 0.02, W() * 0.015);
+      p.y = H() * 0.63 + rand(-H() * 0.03, H() * 0.02);
+      p.vx = rand(-0.04, 0.015);
+      p.vy = front ? rand(-0.40, -0.14) : rand(-0.28, -0.10);
+      p.life = rand(35, 85);
+    } else {
+      p.x = W() * 0.67 + rand(-W() * 0.015, W() * 0.02);
+      p.y = H() * 0.63 + rand(-H() * 0.03, H() * 0.02);
+      p.vx = rand(-0.015, 0.04);
+      p.vy = front ? rand(-0.40, -0.14) : rand(-0.28, -0.10);
+      p.life = rand(35, 85);
+    }
 
-      const embersBack = Array.from({ length: 44 }, () => makeParticle(false));
-      const embersFront = Array.from({ length: 26 }, () => makeParticle(true));
+    p.size = front ? rand(0.45, 1.15) : rand(0.25, 0.75);
+    p.maxLife = p.life;
+    p.color = choose(PARTICLE_COLORS);
+    p.phase = rand(0, Math.PI * 2);
+  };
+
+  p.reset();
+  return p;
+};
+
+      const embersBack = Array.from({ length: 60 }, () => makeParticle(false));
+const embersFront = Array.from({ length: 34 }, () => makeParticle(true));
 
       let flashLife = 0;
       let flashMax = 1;
@@ -269,21 +288,29 @@ base.y = CY();
       const updateParticles = (arr, delta, t, front = false) => {
   arr.forEach((p, i) => {
     p.life -= delta;
-    p.x += p.vx * delta + Math.sin(t * 0.0032 + p.phase + i * 0.1) * (front ? 0.08 : 0.045);
+
+    const drift =
+      p.zone === 'bottom'
+        ? (front ? 0.045 : 0.025)
+        : (front ? 0.030 : 0.018);
+
+    p.x += p.vx * delta + Math.sin(t * 0.0032 + p.phase + i * 0.08) * drift;
     p.y += p.vy * delta;
 
-    if (p.life <= 0 || p.y < -10) p.reset();
+    if (p.life <= 0 || p.y < H() * 0.18) {
+      p.reset();
+    }
 
     const life = clamp(p.life / p.maxLife, 0, 1);
-    const alpha = life * (front ? 0.95 : 0.72);
+    const alpha = life * (front ? 0.92 : 0.68);
 
     p.g.clear();
-    p.g.ellipse(0, 0, p.size * 0.75, p.size * 1.35);
+    p.g.ellipse(0, 0, p.size * 0.55, p.size * 1.25);
     p.g.fill({ color: p.color, alpha });
 
     p.g.x = p.x;
     p.g.y = p.y;
-    p.g.rotation = front ? 0.18 : 0.08;
+    p.g.rotation = p.zone === 'bottom' ? 0.10 : (p.zone === 'leftHand' ? -0.25 : 0.25);
   });
 };
 
