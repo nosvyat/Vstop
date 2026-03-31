@@ -171,10 +171,19 @@ export default function PixiEnergyPoster() {
       };
 
       const resizeScene = () => {
-        base.x = CX();
-        base.y = CY();
-        base.width = W() * 1.03;
-        base.height = H() * 1.03;
+        const textureRatio = base.texture.width / base.texture.height;
+const screenRatio = W() / H();
+
+if (screenRatio > textureRatio) {
+  base.width = W();
+  base.height = W() / textureRatio;
+} else {
+  base.height = H();
+  base.width = H() * textureRatio;
+}
+
+base.x = CX();
+base.y = CY();
 
         bgVignette.clear();
         drawCircle(bgVignette, CX(), CY(), MS() * 0.72, 0x3b0917, 0.12);
