@@ -139,7 +139,7 @@ export default function PixiEnergyPoster() {
           p.y = rand(H() * 0.10, H() * 0.52);
           p.vx = rand(-0.05, 0.05);
           p.vy = front ? rand(-0.90, -0.45) : rand(-0.68, -0.28);
-          p.size = front ? rand(1.4, 3.2) : rand(0.8, 2.0);
+          p.size = front ? rand(0.6, 1.6) : rand(0.35, 1.0);
           p.life = rand(60, 170);
           p.maxLife = p.life;
           p.color = choose(PARTICLE_COLORS);
@@ -159,16 +159,17 @@ export default function PixiEnergyPoster() {
       let flashPoint = { x: 0.5, y: 0.43, r: 0.08, color: COLOR_GOLD };
 
       const triggerFlash = () => {
-        flashPoint = choose([
-          { x: 0.50, y: 0.34, r: 0.065, color: COLOR_VIOLET },
-          { x: 0.50, y: 0.46, r: 0.090, color: COLOR_GOLD },
-          { x: 0.36, y: 0.43, r: 0.060, color: COLOR_GOLD },
-          { x: 0.64, y: 0.43, r: 0.060, color: COLOR_PINK },
-        ]);
-        flashLife = rand(8, 14);
-        flashMax = flashLife;
-        nextFlash = rand(95, 170);
-      };
+  flashPoint = choose([
+    { x: 0.50, y: 0.34, r: 0.095, color: COLOR_VIOLET },
+    { x: 0.50, y: 0.46, r: 0.125, color: COLOR_GOLD },
+    { x: 0.36, y: 0.43, r: 0.090, color: COLOR_GOLD },
+    { x: 0.64, y: 0.43, r: 0.090, color: COLOR_PINK },
+  ]);
+
+  flashLife = rand(10, 16);
+  flashMax = flashLife;
+  nextFlash = rand(95, 170);
+};
 
       const resizeScene = () => {
         const textureRatio = base.texture.width / base.texture.height;
@@ -266,37 +267,56 @@ base.y = CY();
       };
 
       const updateParticles = (arr, delta, t, front = false) => {
-        arr.forEach((p, i) => {
-          p.life -= delta;
-          p.x += p.vx * delta + Math.sin(t * 0.002 + p.phase + i * 0.1) * (front ? 0.05 : 0.03);
-          p.y += p.vy * delta;
+  arr.forEach((p, i) => {
+    p.life -= delta;
+    p.x += p.vx * delta + Math.sin(t * 0.0032 + p.phase + i * 0.1) * (front ? 0.08 : 0.045);
+    p.y += p.vy * delta;
 
-          if (p.life <= 0 || p.y < -10) p.reset();
+    if (p.life <= 0 || p.y < -10) p.reset();
 
-          const life = clamp(p.life / p.maxLife, 0, 1);
-          const alpha = life * (front ? 0.95 : 0.72);
-          p.g.clear();
-          p.g.circle(0, 0, p.size);
-          p.g.fill({ color: p.color, alpha });
-          p.g.x = p.x;
-          p.g.y = p.y;
-        });
-      };
+    const life = clamp(p.life / p.maxLife, 0, 1);
+    const alpha = life * (front ? 0.95 : 0.72);
+
+    p.g.clear();
+    p.g.ellipse(0, 0, p.size * 0.75, p.size * 1.35);
+    p.g.fill({ color: p.color, alpha });
+
+    p.g.x = p.x;
+    p.g.y = p.y;
+    p.g.rotation = front ? 0.18 : 0.08;
+  });
+};
 
       const updateFlash = (delta) => {
-        flash.clear();
-        flashLife -= delta;
-        nextFlash -= delta;
+  flash.clear();
+  flashLife -= delta;
+  nextFlash -= delta;
 
-        if (nextFlash <= 0) triggerFlash();
+  if (nextFlash <= 0) triggerFlash();
 
-        if (flashLife > 0) {
-          const burst = Math.sin((1 - flashLife / flashMax) * Math.PI);
-          const alpha = clamp(burst, 0, 1) * 0.34;
-          drawCircle(flash, W() * flashPoint.x, H() * flashPoint.y, W() * flashPoint.r, flashPoint.color, alpha);
-          drawCircle(flash, W() * flashPoint.x, H() * flashPoint.y, W() * flashPoint.r * 0.55, COLOR_WHITE, alpha * 0.16);
-        }
-      };
+  if (flashLife > 0) {
+    const burst = Math.sin((1 - flashLife / flashMax) * Math.PI);
+    const alpha = clamp(burst, 0, 1) * 0.46;
+
+    drawCircle(
+      flash,
+      W() * flashPoint.x,
+      H() * flashPoint.y,
+      W() * flashPoint.r,
+      flashPoint.color,
+      alpha
+    );
+
+    drawCircle(
+      flash,
+      W() * flashPoint.x,
+      H() * flashPoint.y,
+      W() * flashPoint.r * 0.62,
+      COLOR_WHITE,
+      alpha * 0.22
+    );
+  }
+};
 
       const tick = (ticker) => {
         const t = app.ticker.lastTime;
